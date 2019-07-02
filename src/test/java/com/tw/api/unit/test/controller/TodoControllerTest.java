@@ -21,6 +21,7 @@ import java.util.Optional;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -64,8 +65,7 @@ class TodoControllerTest {
         //given
         final Todo todo = new Todo("Remove unused imports", true);
         Optional<Todo> todoOptional = Optional.of(todo);
-        Long id = 1L;
-        when(todoRepository.findById(id)).thenReturn(todoOptional);
+        when(todoRepository.findById(1L)).thenReturn(todoOptional);
 
         //when
         ResultActions result = mvc.perform(get("/todos/1"));
@@ -80,8 +80,7 @@ class TodoControllerTest {
     void returnNotFoundWhenIdIsFound() throws Exception {
         //given
         Optional<Todo> todoOptional = Optional.empty();
-        Long id = 1L;
-        when(todoRepository.findById(id)).thenReturn(todoOptional);
+        when(todoRepository.findById(1L)).thenReturn(todoOptional);
 
         //when
         ResultActions result = mvc.perform(get("/todos/1"));
@@ -112,10 +111,32 @@ class TodoControllerTest {
                 .andExpect(content().json(jsonContent));
     }
 
-//    @Test
-//    void deleteOneTodo() {
-//
-//    }
+    @Test
+    void deleteOneTodoWhenIdIsFound() throws Exception {
+        //given
+        final Todo todo = new Todo("Remove unused imports", true);
+        Optional<Todo> todoOptional = Optional.of(todo);
+        when(todoRepository.findById(1L)).thenReturn(todoOptional);
+
+        //when
+        ResultActions result = mvc.perform(delete("/todos/1"));
+
+        //then
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    void returnNotFoundForDeleteRequestWhenIdIsFound() throws Exception {
+        //given
+        Optional<Todo> todoOptional = Optional.empty();
+        when(todoRepository.findById(1L)).thenReturn(todoOptional);
+
+        //when
+        ResultActions result = mvc.perform(get("/todos/1"));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
 //
 //    @Test
 //    void updateTodo() {
