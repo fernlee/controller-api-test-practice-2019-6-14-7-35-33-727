@@ -1,6 +1,5 @@
 package com.tw.api.unit.test.controller;
 
-import com.tw.api.unit.test.controller.dto.ResourceWithUrl;
 import com.tw.api.unit.test.domain.todo.Todo;
 import com.tw.api.unit.test.domain.todo.TodoRepository;
 import org.junit.jupiter.api.Test;
@@ -15,6 +14,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,7 +45,6 @@ class TodoControllerTest {
         //given
         final Todo todo = new Todo("Remove unused imports", true);
         List<Todo> todos = Arrays.asList(todo);
-
         when(todoRepository.getAll()).thenReturn(todos);
         //when
         ResultActions result = mvc.perform(get("/todos"));
@@ -55,10 +54,37 @@ class TodoControllerTest {
                 .andExpect(content().json("[{'title': 'Remove unused imports','completed': true}]"));
     }
 
-//    @Test
-//    void getTodo() {
-//    }
-//
+    @Test
+    void getTodoWhenIdIsFound() throws Exception {
+        //given
+        final Todo todo = new Todo("Remove unused imports", true);
+        Optional<Todo> todoOptional = Optional.of(todo);
+        Long id = 1L;
+        when(todoRepository.findById(id)).thenReturn(todoOptional);
+
+        //when
+        ResultActions result = mvc.perform(get("/todos/1"));
+
+        //then
+        result.andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(content().json("{'title': 'Remove unused imports','completed': true}"));
+    }
+
+    @Test
+    void returnNotFoundWhenIdIsFound() throws Exception {
+        //given
+        Optional<Todo> todoOptional = Optional.empty();
+        Long id = 1L;
+        when(todoRepository.findById(id)).thenReturn(todoOptional);
+
+        //when
+        ResultActions result = mvc.perform(get("/todos/1"));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
+
 //    @Test
 //    void saveTodo() {
 //    }
