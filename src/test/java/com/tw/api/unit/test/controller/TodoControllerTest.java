@@ -18,12 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -137,10 +133,66 @@ class TodoControllerTest {
         //then
         result.andExpect(status().isNotFound());
     }
-//
-//    @Test
-//    void updateTodo() {
-//    }
+
+    @Test
+    void updateTodoWhenIdExists() throws Exception {
+        //given
+
+        final Todo todo = new Todo("Remove unused imports", true);
+        final Todo newTodo = new Todo("Clean the code", true);
+        Optional<Todo> todoOptional = Optional.of(todo);
+        when(todoRepository.findById(1L)).thenReturn(todoOptional);
+        final String jsonContent = "{title: 'Clean the code','completed': true}";
+
+        //when
+        ResultActions result = mvc.perform(patch("/todos/1")
+                .content(asJsonString(newTodo))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(content().json(jsonContent));
+    }
+
+    @Test
+    void returnNotFoundForUpdateRequestWhenIdIsFound() throws Exception {
+        //given
+
+        final Todo todo = new Todo("Remove unused imports", true);
+        final Todo newTodo = new Todo("Clean the code", true);
+        Optional<Todo> todoOptional = Optional.empty();
+        when(todoRepository.findById(1L)).thenReturn(todoOptional);
+
+        //when
+        ResultActions result = mvc.perform(patch("/todos/1")
+                .content(asJsonString(newTodo))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    void returnBadRequestForUpdateRequestWhenNewTodoIsNull() throws Exception {
+        //given
+
+        final Todo todo = new Todo("Remove unused imports", true);
+        final Todo newTodo = new Todo("Clean the code", true);
+        Optional<Todo> todoOptional = Optional.empty();
+        when(todoRepository.findById(1L)).thenReturn(todoOptional);
+
+        //when
+        ResultActions result = mvc.perform(patch("/todos/1")
+                .content("")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
 
     private static String asJsonString(final Object obj) {
         try {
